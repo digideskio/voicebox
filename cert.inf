@@ -1,0 +1,30 @@
+[Version] 
+Signature="$Windows NT$"
+
+[NewRequest] 
+Subject = "CN=shawabawa.dnsd.me"   ; For a wildcard use "CN=*.CONTOSO.COM" for example 
+; For an empty subject use the following line instead or remove the Subject line entierely 
+; Subject = 
+Exportable = FALSE                  ; Private key is not exportable 
+KeyLength = 2048                    ; Common key sizes: 512, 1024, 2048, 4096, 8192, 16384 
+KeySpec = 1                         ; AT_KEYEXCHANGE 
+KeyUsage = 0xA0                     ; Digital Signature, Key Encipherment
+MachineKeySet = True                ; The key belongs to the local computer account 
+ProviderName = "Microsoft RSA SChannel Cryptographic Provider" 
+ProviderType = 12 
+SMIME = FALSE 
+RequestType = CMC
+
+; At least certreq.exe shipping with Windows Vista/Server 2008 is required to interpret the [Strings] and [Extensions] sections below
+
+[Strings] 
+szOID_SUBJECT_ALT_NAME2 = "2.5.29.17" 
+szOID_ENHANCED_KEY_USAGE = "2.5.29.37" 
+szOID_PKIX_KP_SERVER_AUTH = "1.3.6.1.5.5.7.3.1" 
+szOID_PKIX_KP_CLIENT_AUTH = "1.3.6.1.5.5.7.3.2"
+
+[Extensions] 
+%szOID_ENHANCED_KEY_USAGE% = "{text}%szOID_PKIX_KP_SERVER_AUTH%,%szOID_PKIX_KP_CLIENT_AUTH%"
+
+[RequestAttributes] 
+CertificateTemplate= WebServer
