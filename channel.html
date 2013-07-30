@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <link type="text/css" href="/style.css" rel="stylesheet"></link>
+
+        <script src="/webrtc.io.js"></script>
+        <script src='/js/jquery-1.7.2.js'></script>
+        <script> 
+            var PeerConnection = window.PeerConnection || window.webkitPeerConnection00 || window.webkitRTCPeerConnection;
+            var localStream;
+            var audioNum = 0;
+
+            $(document).ready(function() {
+                init();
+                // var path = document.location.pathname;
+                // $('#text').text(document.location.pathname);
+                // navigator.webkitGetUserMedia({'audio':true, 'video':false}, userMediaSuccess, userMediaError});
+                // console.log('Requested audio');
+            });      
+
+            function init() {
+                if(PeerConnection){
+                    rtc.createStream({"video": false, "audio": true}, function(stream) {
+                        rtc.attachStream(stream, 'audio');
+                    });
+                }
+
+                var room = window.location.hash.slice(1);
+
+                rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length, window.location.href.length-2), room);
+
+                rtc.on('add remote stream', function(stream, socketId) {
+                  console.log("ADDING REMOTE STREAM...");
+                  var clone = document.getElementById('audio').cloneNode(false);
+                  clone.id = 'audio'+socketId;
+                  $('#container').append(clone);
+                  rtc.attachStream(stream, clone.id);
+                });
+                rtc.on('disconnect stream', function(data) {
+                    console.log('remove ' + data);
+                    $('#audio'+data).remove();
+                });                
+
+            }
+        </script>
+    </head>
+    <body>
+        <div id='container'>
+            <video id='audio' autoplay></video>
+        </div>
+        <div id='text'>placeholder</div>
+    </body>
+</html>

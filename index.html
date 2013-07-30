@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link type="text/css" href="/style.css" rel="stylesheet"></link>
+        <script src='js/jquery-1.7.2.js'></script>
+        <script src="/webrtc.io.js"></script>
+        <script>
+            var PeerConnection = window.PeerConnection || window.webkitPeerConnection00 || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+            var localStream;
+            var room = {
+                name: undefined,
+                users: []
+            }         
+            
+            setInterval(retry_connections, 5000);
+
+            rtc.on('room_info', function(data) {
+                if (data.room === room.name) {
+                    room.users = data.users;
+                }
+                console.log('Got room info.'+get_num_connections()+'/'+room.users.length);
+
+                update_room_status();
+            });
+
+            rtc.on('add remote stream', function(stream, socketId) {
+              console.log("ADDING REMOTE STREAM...");
+              $('.container').html('Joined!');
+              var clone = document.getElementById('audio').cloneNode(false);
+              clone.id = 'audio'+socketId;
+              $('.audio_container').append(clone);
+              rtc.attachStream(stream, clone.id);
+              update_room_status();
+            });
+
+            rtc.on('disconnect stream', function(data) {
+                console.log('remove ' + data);
+                $('#audio'+data).remove();
+                update_room_status();
+            });    
+                 
+            rtc.on('connect', function() {
+                request_room_update();
+            });
+
+            function request_room_update() {
+                rtc._socket.send(JSON.stringify({
+                    "eventName": "update_room",
+                    "data": {
+                        "room": room.name
+                    }
+                }));
+            }
+
+            function retry_connections() {
+                if (get_num_connections() < room.users.length) {
+                    console.log('sending new offers');
+                    request_room_update();
+                    if (rtc.initializedStreams === rtc.numStreams) {
+                        rtc.fire('ready');
+                    }
+                }
+            }
+
+            if(PeerConnection){
+                rtc.createStream({"video": false, "audio": true}, function(stream) {
+                });
+            }
+
+            $(document).ready(function() {
+                update_room();
+            });
+
+            function get_num_connections() {
+                return $('video').length;
+            }
+            function update_room_status() {
+                $('.container').html('Connected to ' + get_num_connections() + ' out of ' + room.users.length + ' users.');
+            }
+
+            function connect_to_room(room_name) {
+                rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length, window.location.href.length - window.location.hash.length), room_name);
+                room.name = room_name;
+            }
+
+            function update_room() {
+                var room_name = window.location.hash;
+
+                if(room_name == '') {
+                    $('.container').html($('.default_content').html());
+                } else {
+                    $('.container').html('joining...');
+                    connect_to_room(room_name);
+                }
+
+            }
+
+            function new_room() {
+                var room_name = "";
+                var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                var room_name_length = 6;
+
+                for( var i=0; i < room_name_length; i++ ) {
+                    room_name += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+
+                window.location.hash = room_name;
+                update_room();
+                
+            }
+        </script>
+    </head>
+    <body>
+        <div class='audio_container'>
+            <video id='audio' autoplay></video>
+        </div>
+        <div class='header'><p class='centered_text'>Welcome to Voicebox!</p></div>
+        <div class='content'><div class='header' style='display: block; position: relative;'><p class='centered_text'>Welcome to Voicebox!</p></div><div class='container'></div></div>
+        <div class='default_content'>You are not currently in a room. Click <a href='javascript: new_room();'>here</a> to create a new room.</div>
+        <div class='footer'><p class='centered_text'>© 2013</p></div>
+    </body>
+</html>

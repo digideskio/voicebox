@@ -1,0 +1,10 @@
+{
+  "name": "cloaked-nemesis",
+  "description": "Nobody knows...",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.1.0",
+    "webrtc.io": "0.0.3"
+  }
+}
